@@ -8,4 +8,4 @@ nix = "*"
 users = "*"
 notify = "6.1"
 clap = { version = "4.5", features = ["derive"] }
-tokio = { version = "1.47.1", features = ["rt", "macros", "time"] }
+tokio = { version = "1.47.1", features = ["rt", "macros", "time", "rt-multi-thread"] }
