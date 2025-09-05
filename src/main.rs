@@ -2,6 +2,8 @@ use clap::Parser;
 use notify::{
     Event, EventKind, RecommendedWatcher, RecursiveMode, Result as NotifyResult, Watcher,
 };
+use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
 
@@ -37,6 +39,29 @@ fn main() -> NotifyResult<()> {
         }
     }
     Ok(())
+}
+
+struct EventQueue {
+    handle_event_delay: std::time::Duration,
+    events_input: Vec<Event>,
+    files_check_again: BTreeMap<std::time::Instant, PathBuf>,
+}
+
+impl EventQueue {
+    pub fn add_event(&mut self, event: &Event) {
+        if let EventKind::Create(_) = event.kind {
+            for path in &event.paths {
+                if path.is_file() {
+                    self.handle_file_created_event(path);
+                }
+            }
+        }
+    }
+
+    pub fn handle_file_created_event(&mut self, path: &PathBuf) {
+        let check_at_future_time = std::time::Instant::now() + self.handle_event_delay;
+        self.files_check_again.insert(check_at_future_time, path.clone());
+    }
 }
 
 fn handle_event(event: &Event, command: &str, user: &str) {
