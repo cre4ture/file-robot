@@ -98,16 +98,34 @@ async fn run_event_queue(
             }
             let q = &mut *gq.unwrap();
             let now = std::time::Instant::now();
+            let mut to_check = Vec::new();
             for (&instant, path) in &q.files_check_again {
                 if instant <= now {
-                    to_handle.push(path.clone());
+                    to_check.push(path.clone());
                 } else {
                     next_instant = Some(instant);
                     break;
                 }
             }
-            for path in &to_handle {
+            for path in &to_check {
                 q.files_check_again.retain(|_, p| p != path);
+            }
+            for path in to_check {
+                let Ok(m) = path.metadata() else {
+                    continue;
+                };
+                let Ok(mtime) = m.modified() else {
+                    continue;
+                };
+                let last_modification_age = std::time::SystemTime::now()
+                    .duration_since(mtime)
+                    .unwrap_or_default();
+                if last_modification_age >= q.handle_event_delay {
+                    to_handle.push(path);
+                } else {
+                    let new_check_time = std::time::Instant::now() + (q.handle_event_delay - last_modification_age);
+                    q.files_check_again.insert(new_check_time, path.clone());
+                }
             }
         }
         for path in to_handle {
