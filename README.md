@@ -1,0 +1,1 @@
+file-robot watches as root on a specified directory for new files. After 5 seconds of no modification, the specified command is executed with the specified user rights. To ensure the speciified user has access, the accessrights are temporarily adapted while command executes.
