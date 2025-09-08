@@ -42,7 +42,7 @@ async fn main() -> NotifyResult<()> {
         handle_event_delay: std::time::Duration::from_secs(5),
         files_check_again: BTreeMap::new(),
     };
-    let queue = Arc::new(Box::new(Mutex::new(event_queue)));
+    let queue = Arc::new(Mutex::new(event_queue));
 
     // Spawn the event loop
     tokio::spawn(run_event_queue(queue.clone(), event_handler));
@@ -84,7 +84,7 @@ impl EventQueue {
 
 /// Start the async event loop to process delayed events
 async fn run_event_queue(
-    protected_q: Arc<Box<Mutex<EventQueue>>>,
+    protected_q: Arc<Mutex<EventQueue>>,
     event_handler: Arc<dyn Fn(PathBuf) + Send + Sync>,
 ) {
     loop {
